@@ -10,4 +10,7 @@ tags:
 ---
 
 # rss-mcp-client
+
+[![HuggingFace Space](https://github.com/gperdrizet/rss-mcp-client/actions/workflows/publish_hf_space.yml/badge.svg)](https://github.com/gperdrizet/rss-mcp-client/actions/workflows/publish_hf_space.yml)
+
 LLM agent RSS feed reader using Model Context Protocol.
