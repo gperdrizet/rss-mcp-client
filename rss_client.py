@@ -28,10 +28,11 @@ logger = logging.getLogger(__name__)
 
 client = MCPClientWrapper('https://agents-mcp-hackathon-rss-mcp-server.hf.space/gradio_api/mcp/sse')
 
-# def gradio_interface():
 with gr.Blocks(title='MCP RSS client') as demo:
     gr.Markdown('# MCP RSS reader')
-    gr.Markdown('Connect to the MCP RSS server: https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server')
+    gr.Markdown(
+        'Connect to the MCP RSS server: https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server'
+    )
 
     connect_btn = gr.Button('Connect')
     status = gr.Textbox(label='Connection Status', interactive=False, lines=50)
