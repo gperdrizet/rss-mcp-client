@@ -51,26 +51,28 @@ async def send_message(message: str, chat_history: list) -> str:
 
 
 with gr.Blocks(title='MCP RSS client') as demo:
-    gr.Markdown('# MCP RSS reader')
-    gr.Markdown(
-        'Connect to the MCP RSS server: ' +
-        'https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server'
-    )
+    gr.Markdown('# Agentic RSS reader')
+    gr.Markdown("""
+        Uses sister Space 
+        [RSS feed reader](https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server) 
+        via MCP. Click 'Connect to MCP server' to get started. Check out the
+        [main project repo on GitHub](https://github.com/gperdrizet/MCP-hackathon/tree/main).
+        Both Spaces by [George Perdrizet](https://www.linkedin.com/in/gperdrizet/).
+    """)
 
-    connect_btn = gr.Button('Connect')
-    status = gr.Textbox(label='Connection Status', interactive=False, lines=10)
+    connect_btn = gr.Button('Connect to MCP server')
+    status = gr.Textbox(label='MCP server tool dump', interactive=False, lines=4)
 
     chatbot = gr.Chatbot(
         value=[],
         height=500,
         type='messages',
-        show_copy_button=True,
-        avatar_images=('👤', '🤖')
+        show_copy_button=True
     )
 
     msg = gr.Textbox(
-        label='Your Question',
-        placeholder='Ask about an RSS feed',
+        label='Ask about content or articles on a site or platform',
+        placeholder='Is there anything new on Hacker News?',
         scale=4
     )
 
