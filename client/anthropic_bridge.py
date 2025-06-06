@@ -192,9 +192,10 @@ class AnthropicBridge(LLMBridge):
             model=self.model,
             max_tokens=4096,
             system='You are a helpful tool-using assistant.',
-            messages=[
-                {'role': 'user', 'content': query}
-            ],
+            # messages=[
+            #     {'role': 'user', 'content': query}
+            # ],
+            messages=query,
             tools=formatted_tools
         )
 
