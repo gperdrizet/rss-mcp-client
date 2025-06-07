@@ -62,11 +62,13 @@ class LLMBridge(abc.ABC):
 
 
     @abc.abstractmethod
-    async def submit_query(self, query: str, formatted_tools: Any) -> Dict[str, Any]:
+    async def submit_query(self, system_prompt: str, query: List[Dict], formatted_tools: Any) -> Dict[str, Any]:
         '''Submit a query to the LLM with the formatted tools.
 
         Args:
-            query: User query string
+            query: User query string            # messages=[
+            #     {'role': 'user', 'content': query}
+            # ],
             formatted_tools: Tools in the LLM-specific format
             
         Returns:
@@ -101,7 +103,7 @@ class LLMBridge(abc.ABC):
         return await self.mcp_client.invoke_tool(tool_name, kwargs)
 
 
-    async def process_query(self, query: str) -> Dict[str, Any]:
+    async def process_query(self, system_prompt: str, query: List[Dict]) -> Dict[str, Any]:
         '''Process a user query through the LLM and execute any tool calls.
 
         This method handles the full flow:
@@ -125,7 +127,7 @@ class LLMBridge(abc.ABC):
         formatted_tools = await self.format_tools(self.tools)
 
         # 3. Submit query to LLM
-        llm_response = await self.submit_query(query, formatted_tools)
+        llm_response = await self.submit_query(system_prompt, query, formatted_tools)
 
         # 4. Parse tool calls from LLM response
         tool_call = await self.parse_tool_call(llm_response)
@@ -176,7 +178,8 @@ class AnthropicBridge(LLMBridge):
 
     async def submit_query(
             self,
-            query: str,
+            system_prompt: str,
+            query: List[Dict],
             formatted_tools: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         '''Submit a query to Anthropic with the formatted tools.
@@ -191,10 +194,7 @@ class AnthropicBridge(LLMBridge):
         response = self.llm_client.messages.create(
             model=self.model,
             max_tokens=4096,
-            system='You are a helpful tool-using assistant.',
-            # messages=[
-            #     {'role': 'user', 'content': query}
-            # ],
+            system=system_prompt,
             messages=query,
             tools=formatted_tools
         )
