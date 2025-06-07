@@ -83,8 +83,6 @@ class MCPClientWrapper:
         self.endpoint = endpoint
         self.timeout = timeout
         self.max_retries = max_retries
-        # self.tools = None
-        # self.anthropic = Anthropic()
 
 
     async def _execute_with_retry(self, operation_name: str, operation_func):
