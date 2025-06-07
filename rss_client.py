@@ -76,7 +76,7 @@ with gr.Blocks(title='MCP RSS client') as demo:
 
     chatbot = gr.Chatbot(
         value=[],
-        height=200,
+        height=800,
         type='messages',
         show_copy_button=True
     )
@@ -98,4 +98,10 @@ with gr.Blocks(title='MCP RSS client') as demo:
 
 if __name__ == '__main__':
 
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    current_directory = os.getcwd()
+
+    if 'pyrite' in current_directory:
+        demo.launch(server_name="0.0.0.0", server_port=7860)
+
+    else:
+        demo.launch()
