@@ -6,6 +6,7 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
 import gradio as gr
+import assets.html as html
 import client.gradio_functions as gradio_funcs
 import client.interface as interface
 from client.mcp_client import MCPClientWrapper
@@ -66,14 +67,10 @@ async def send_message(message: str, chat_history: list) -> str:
 
 
 with gr.Blocks(title='MCP RSS client') as demo:
-    gr.Markdown('# Agentic RSS reader')
-    gr.Markdown('''
-        Uses sister Space 
-        [RSS feed reader](https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server) 
-        via MCP. Click 'Connect to MCP server' to get started. Check out the
-        [main project repo on GitHub](https://github.com/gperdrizet/MCP-hackathon/tree/main).
-        Both Spaces by [George Perdrizet](https://www.linkedin.com/in/gperdrizet/).
-    ''')
+    with gr.Row():
+        gr.HTML(html.TITLE)
+
+    gr.Markdown(html.DESCRIPTION)
 
     # MCP connection/tool dump
     connect_btn = gr.Button('Connect to MCP server')
