@@ -6,12 +6,16 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
 import gradio as gr
+import client.gradio_functions as gradio_funcs
 import client.interface as interface
 from client.mcp_client import MCPClientWrapper
 from client.anthropic_bridge import AnthropicBridge
 
 # Make sure log directory exists
 Path('logs').mkdir(parents=True, exist_ok=True)
+
+# Clear old logs if present
+gradio_funcs.delete_old_logs('logs', 'rss_client')
 
 # Set-up logger
 logger = logging.getLogger()
@@ -60,21 +64,6 @@ async def send_message(message: str, chat_history: list) -> str:
 
     return '', chat_history
 
-def update_log(n: int = 10):
-    '''Gets updated logging output from disk to display to user.
-    
-    Args:
-        n: number of most recent lines of logging output to display
-
-    Returns:
-        Logging output as string
-    '''
-
-    with open('logs/rss_client.log', 'r', encoding='utf-8') as log_file:
-        lines = log_file.readlines()
-
-    return ''.join(lines[-n:])
-
 
 with gr.Blocks(title='MCP RSS client') as demo:
     gr.Markdown('# Agentic RSS reader')
@@ -94,7 +83,11 @@ with gr.Blocks(title='MCP RSS client') as demo:
     # Log output
     logs = gr.Textbox(label='Client logs', lines=10, max_lines=10)
     timer = gr.Timer(1, active=True)
-    timer.tick(lambda: update_log(), outputs=logs) # pylint: disable=no-member, disable=unnecessary-lambda
+
+    timer.tick( # pylint: disable=no-member
+        lambda: gradio_funcs.update_log(), # pylint: disable=unnecessary-lambda
+        outputs=logs
+    )
 
     # Chat interface
     chatbot = gr.Chatbot(
