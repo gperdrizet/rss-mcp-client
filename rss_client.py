@@ -6,12 +6,17 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
 import gradio as gr
+import assets.html as html
+import client.gradio_functions as gradio_funcs
 import client.interface as interface
 from client.mcp_client import MCPClientWrapper
 from client.anthropic_bridge import AnthropicBridge
 
 # Make sure log directory exists
 Path('logs').mkdir(parents=True, exist_ok=True)
+
+# Clear old logs if present
+gradio_funcs.delete_old_logs('logs', 'rss_client')
 
 # Set-up logger
 logger = logging.getLogger()
@@ -62,21 +67,29 @@ async def send_message(message: str, chat_history: list) -> str:
 
 
 with gr.Blocks(title='MCP RSS client') as demo:
-    gr.Markdown('# Agentic RSS reader')
-    gr.Markdown("""
-        Uses sister Space 
-        [RSS feed reader](https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server) 
-        via MCP. Click 'Connect to MCP server' to get started. Check out the
-        [main project repo on GitHub](https://github.com/gperdrizet/MCP-hackathon/tree/main).
-        Both Spaces by [George Perdrizet](https://www.linkedin.com/in/gperdrizet/).
-    """)
+    with gr.Row():
+        gr.HTML(html.TITLE)
 
+    gr.Markdown(html.DESCRIPTION)
+
+    # MCP connection/tool dump
     connect_btn = gr.Button('Connect to MCP server')
     status = gr.Textbox(label='MCP server tool dump', interactive=False, lines=4)
+    connect_btn.click(RSS_CLIENT.list_tools, outputs=status) # pylint: disable=no-member
 
+    # Log output
+    logs = gr.Textbox(label='Client logs', lines=10, max_lines=10)
+    timer = gr.Timer(1, active=True)
+
+    timer.tick( # pylint: disable=no-member
+        lambda: gradio_funcs.update_log(), # pylint: disable=unnecessary-lambda
+        outputs=logs
+    )
+
+    # Chat interface
     chatbot = gr.Chatbot(
         value=[],
-        height=800,
+        height=500,
         type='messages',
         show_copy_button=True
     )
@@ -87,8 +100,6 @@ with gr.Blocks(title='MCP RSS client') as demo:
         placeholder='Is there anything new on Hacker News?',
         scale=4
     )
-
-    connect_btn.click(RSS_CLIENT.list_tools, outputs=status) # pylint: disable=no-member
 
     msg.submit( # pylint: disable=no-member
         send_message,
@@ -101,7 +112,7 @@ if __name__ == '__main__':
     current_directory = os.getcwd()
 
     if 'pyrite' in current_directory:
-        demo.launch(server_name="0.0.0.0", server_port=7860)
+        demo.launch(server_name='0.0.0.0', server_port=7860)
 
     else:
         demo.launch()
