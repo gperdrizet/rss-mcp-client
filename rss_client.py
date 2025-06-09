@@ -1,7 +1,11 @@
 '''RSS MCP server demonstration client app.'''
 
 import os
+import asyncio
 import logging
+import time
+import queue
+from typing import Tuple
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 import gradio as gr
@@ -48,12 +52,29 @@ BRIDGE = AnthropicBridge(
 
 logger.info('Started Anthropic API bridge')
 
+# Queue to return responses to user
+OUTPUT_QUEUE = queue.Queue()
+logger.info('Created response queue')
 
-async def send_message(message: str, chat_history: list) -> str:
-    '''Submits user message to agent.
-    
+def user_message(message: str, history: list) -> Tuple[str, list]:
+    '''Adds user message to conversation and returns for immediate posting.
+
     Args:
         message: the new message from the user as a string
+        chat_history: list containing conversation history where each element is
+            a dictionary with keys 'role' and 'content'
+
+    Returns
+        New chat history with user's message added.
+    '''
+
+    return '', history + [{'role': 'user', 'content': message}]
+
+
+def send_message(chat_history: list):
+    '''Submits chat history to agent, streams reply, one character at a time.
+    
+    Args:
         chat_history: list containing conversation history where each element is
             a dictionary with keys 'role' and 'content'
 
@@ -61,10 +82,21 @@ async def send_message(message: str, chat_history: list) -> str:
         New chat history with model's response to user added.
     '''
 
-    chat_history.append({'role': 'user', 'content': message})
-    chat_history = await interface.agent_input(BRIDGE, chat_history)
+    asyncio.run(interface.agent_input(BRIDGE, OUTPUT_QUEUE, chat_history))
 
-    return '', chat_history
+    while True:
+        response = OUTPUT_QUEUE.get()
+
+        if response == 'bot-finished':
+            break
+
+        chat_history.append({'role': 'assistant', 'content': ''})
+
+        for character in response:
+            chat_history[-1]['content'] += character
+            time.sleep(0.005)
+
+            yield chat_history
 
 
 with gr.Blocks(title='MCP RSS client') as demo:
@@ -82,8 +114,8 @@ with gr.Blocks(title='MCP RSS client') as demo:
     )
 
     # Dialog log output
-    dialog_output = gr.Textbox(label='Internal dialog', lines=10, max_lines=10)
-    timer = gr.Timer(1, active=True)
+    dialog_output = gr.Textbox(label='Internal dialog', lines=10, max_lines=100)
+    timer = gr.Timer(0.5, active=True)
 
     timer.tick( # pylint: disable=no-member
         lambda: gradio_funcs.update_dialog(), # pylint: disable=unnecessary-lambda
@@ -106,9 +138,9 @@ with gr.Blocks(title='MCP RSS client') as demo:
     )
 
     msg.submit( # pylint: disable=no-member
-        send_message,
-        [msg, chatbot],
-        [msg, chatbot]
+        user_message, [msg, chatbot], [msg, chatbot], queue=False
+    ).then(
+        send_message, chatbot, chatbot
     )
 
 

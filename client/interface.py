@@ -2,6 +2,7 @@
 
 import json
 import logging
+import queue
 from anthropic.types import text_block
 from gradio.components.chatbot import ChatMessage
 
@@ -15,6 +16,7 @@ dialog = gradio_funcs.get_dialog_logger(clear = True)
 
 async def agent_input(
         bridge: AnthropicBridge,
+        output_queue: queue.Queue,
         chat_history: list
 ) -> list:
 
@@ -46,6 +48,7 @@ async def agent_input(
             else:
                 intermediate_reply = f'I Will check the {website} RSS feed for you'
 
+            output_queue.put(intermediate_reply)
             dialog.info('LLM: %s', intermediate_reply)
             dialog.info('LLM: called %s on %s', tool_name, website)
 
@@ -63,6 +66,9 @@ async def agent_input(
                 'content': prompt
             }]
 
+            dialog.info('System: re-prompting LLM with return from %s call', tool_name)
+            dialog.info('New prompt: %s ...', prompt[:150])
+
             logger.info('Re-prompting input %s', input_message)
             result = await bridge.process_query(
                 prompts.GET_FEED_SYSTEM_PROMPT,
@@ -71,22 +77,12 @@ async def agent_input(
 
             try:
 
-                final_reply = result['llm_response'].content[0].text
+                reply = result['llm_response'].content[0].text
 
             except (IndexError, AttributeError):
-                final_reply = 'No final reply from model'
+                reply = 'No final reply from model'
 
-            logger.info('LLM final reply: %s', final_reply)
-
-            chat_history.append({
-                "role": "assistant",
-                "content": intermediate_reply
-            })
-
-            chat_history.append({
-                "role": "assistant",
-                "content": final_reply
-            })
+            logger.info('LLM final reply: %s', reply)
 
     else:
         try:
@@ -97,12 +93,9 @@ async def agent_input(
 
         logger.info('Direct, no-tool reply: %s', reply)
 
-        chat_history.append({
-            "role": "assistant",
-            "content": reply
-        })
-
-    return chat_history
+    dialog.info('LLM: %s ...', reply[:100])
+    output_queue.put(reply)
+    output_queue.put('bot-finished')
 
 
 def format_chat_history(history) -> list[dict]:
@@ -114,9 +107,9 @@ def format_chat_history(history) -> list[dict]:
         if isinstance(chat_message, ChatMessage):
             role, content = chat_message.role, chat_message.content
         else:
-            role, content = chat_message.get("role"), chat_message.get("content")
+            role, content = chat_message.get('role'), chat_message.get('content')
 
-        if role in ["user", "assistant", "system"]:
-            messages.append({"role": role, "content": content})
+        if role in ['user', 'assistant', 'system']:
+            messages.append({'role': role, 'content': content})
 
     return messages
