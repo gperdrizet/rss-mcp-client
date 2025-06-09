@@ -67,7 +67,7 @@ async def agent_input(
             }]
 
             dialog.info('System: re-prompting LLM with return from %s call', tool_name)
-            dialog.info('New prompt: %s ...', prompt[:150])
+            dialog.info('New prompt: %s ...', prompt[:75])
 
             logger.info('Re-prompting input %s', input_message)
             result = await bridge.process_query(
@@ -93,7 +93,7 @@ async def agent_input(
 
         logger.info('Direct, no-tool reply: %s', reply)
 
-    dialog.info('LLM: %s ...', reply[:100])
+    dialog.info('LLM: %s ...', reply[:175])
     output_queue.put(reply)
     output_queue.put('bot-finished')
 
