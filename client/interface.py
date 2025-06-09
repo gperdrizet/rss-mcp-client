@@ -7,6 +7,11 @@ from gradio.components.chatbot import ChatMessage
 
 from client import prompts
 from client.anthropic_bridge import AnthropicBridge
+import client.gradio_functions as gradio_funcs
+
+# Create dialog logger
+dialog = gradio_funcs.get_dialog_logger(clear = True)
+
 
 async def agent_input(
         bridge: AnthropicBridge,
@@ -15,10 +20,16 @@ async def agent_input(
 
     '''Handles model interactions.'''
 
-    function_logger = logging.getLogger(__name__ + '.agent_input')
+    logger = logging.getLogger(__name__ + '.agent_input')
+
+    user_query = chat_history[-1]['content']
+    dialog.info('User: %s', user_query)
 
     input_messages = format_chat_history(chat_history)
-    result = await bridge.process_query(prompts.DEFAULT_SYSTEM_PROMPT, input_messages)
+    result = await bridge.process_query(
+        prompts.DEFAULT_SYSTEM_PROMPT,
+        input_messages
+    )
 
     if result['tool_result']:
         tool_call = result['tool_call']
@@ -28,7 +39,6 @@ async def agent_input(
 
             tool_parameters = tool_call['parameters']
             website = tool_parameters['website']
-            user_query = input_messages[-1]['content']
             response_content = result['llm_response'].content[0]
 
             if isinstance(response_content, text_block.TextBlock):
@@ -36,9 +46,8 @@ async def agent_input(
             else:
                 intermediate_reply = f'I Will check the {website} RSS feed for you'
 
-            function_logger.info('User query: %s', user_query)
-            function_logger.info('Model intermediate reply: %s', intermediate_reply)
-            function_logger.info('LLM called %s on %s', tool_name, website)
+            dialog.info('LLM: %s', intermediate_reply)
+            dialog.info('LLM: called %s on %s', tool_name, website)
 
             articles = json.loads(result['tool_result'].content)['text']
 
@@ -54,8 +63,11 @@ async def agent_input(
                 'content': prompt
             }]
 
-            function_logger.info('Re-prompting input %s', input_message)
-            result = await bridge.process_query(prompts.GET_FEED_SYSTEM_PROMPT, input_message)
+            logger.info('Re-prompting input %s', input_message)
+            result = await bridge.process_query(
+                prompts.GET_FEED_SYSTEM_PROMPT,
+                input_message
+            )
 
             try:
 
@@ -64,7 +76,7 @@ async def agent_input(
             except (IndexError, AttributeError):
                 final_reply = 'No final reply from model'
 
-            function_logger.info('LLM final reply: %s', final_reply)
+            logger.info('LLM final reply: %s', final_reply)
 
             chat_history.append({
                 "role": "assistant",
@@ -83,7 +95,7 @@ async def agent_input(
         except AttributeError:
             reply = 'Bad reply - could not parse'
 
-        function_logger.info('Direct, no-tool reply: %s', reply)
+        logger.info('Direct, no-tool reply: %s', reply)
 
         chat_history.append({
             "role": "assistant",

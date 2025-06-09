@@ -4,7 +4,6 @@ import os
 import logging
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
-
 import gradio as gr
 import assets.html as html
 import client.gradio_functions as gradio_funcs
@@ -12,15 +11,15 @@ import client.interface as interface
 from client.mcp_client import MCPClientWrapper
 from client.anthropic_bridge import AnthropicBridge
 
+# Set-up root logger so we send logs from the MCP client,
+# Gradio and the rest of the project to the same file.
 # Make sure log directory exists
 Path('logs').mkdir(parents=True, exist_ok=True)
 
 # Clear old logs if present
 gradio_funcs.delete_old_logs('logs', 'rss_client')
 
-# Set-up logger
-logger = logging.getLogger()
-
+# Configure
 logging.basicConfig(
     handlers=[RotatingFileHandler(
         'logs/rss_client.log',
@@ -32,18 +31,23 @@ logging.basicConfig(
     format='%(levelname)s - %(name)s - %(message)s'
 )
 
+# Get a logger
 logger = logging.getLogger(__name__)
 
 # Handle MCP server connection and interactions
 RSS_CLIENT = MCPClientWrapper(
     'https://agents-mcp-hackathon-rss-mcp-server.hf.space/gradio_api/mcp/sse'
 )
+logger.info('Started MCP client')
 
 # Handles Anthropic API I/O
 BRIDGE = AnthropicBridge(
     RSS_CLIENT,
     api_key=os.environ['ANTHROPIC_API_KEY']
 )
+
+logger.info('Started Anthropic API bridge')
+
 
 async def send_message(message: str, chat_history: list) -> str:
     '''Submits user message to agent.
@@ -57,10 +61,7 @@ async def send_message(message: str, chat_history: list) -> str:
         New chat history with model's response to user added.
     '''
 
-    function_logger = logging.getLogger(__name__ + '.submit_input')
-    function_logger.info('Submitting user message: %s', message)
-
-    chat_history.append({"role": "user", "content": message})
+    chat_history.append({'role': 'user', 'content': message})
     chat_history = await interface.agent_input(BRIDGE, chat_history)
 
     return '', chat_history
@@ -75,15 +76,18 @@ with gr.Blocks(title='MCP RSS client') as demo:
     # MCP connection/tool dump
     connect_btn = gr.Button('Connect to MCP server')
     status = gr.Textbox(label='MCP server tool dump', interactive=False, lines=4)
-    connect_btn.click(RSS_CLIENT.list_tools, outputs=status) # pylint: disable=no-member
+    connect_btn.click(# pylint: disable=no-member
+        RSS_CLIENT.list_tools,
+        outputs=status
+    )
 
-    # Log output
-    logs = gr.Textbox(label='Client logs', lines=10, max_lines=10)
+    # Dialog log output
+    dialog_output = gr.Textbox(label='Internal dialog', lines=10, max_lines=10)
     timer = gr.Timer(1, active=True)
 
     timer.tick( # pylint: disable=no-member
-        lambda: gradio_funcs.update_log(), # pylint: disable=unnecessary-lambda
-        outputs=logs
+        lambda: gradio_funcs.update_dialog(), # pylint: disable=unnecessary-lambda
+        outputs=dialog_output
     )
 
     # Chat interface
@@ -107,12 +111,15 @@ with gr.Blocks(title='MCP RSS client') as demo:
         [msg, chatbot]
     )
 
+
 if __name__ == '__main__':
 
     current_directory = os.getcwd()
 
     if 'pyrite' in current_directory:
+        logger.info('Starting RASS on LAN')
         demo.launch(server_name='0.0.0.0', server_port=7860)
 
     else:
+        logger.info('Starting RASS')
         demo.launch()
