@@ -40,8 +40,8 @@ logger = logging.getLogger(__name__)
 
 # Handle MCP server connection and interactions
 RSS_CLIENT = MCPClientWrapper(
-    #'https://agents-mcp-hackathon-rss-mcp-server.hf.space/gradio_api/mcp/sse',
-    'http://127.0.0.1:7861/gradio_api/mcp/sse'
+    'https://agents-mcp-hackathon-rss-mcp-server.hf.space/gradio_api/mcp/sse',
+    #'http://127.0.0.1:7861/gradio_api/mcp/sse'
 )
 logger.info('Started MCP client')
 
@@ -147,12 +147,12 @@ with gr.Blocks(title='MCP RSS client') as demo:
 
 if __name__ == '__main__':
 
-    # current_directory = os.getcwd()
+    current_directory = os.getcwd()
 
-    # if 'pyrite' in current_directory:
-    logger.info('Starting RASS on LAN')
-    demo.launch(server_name='0.0.0.0', server_port=7860)
+    if 'pyrite' in current_directory:
+        logger.info('Starting RASS on LAN')
+        demo.launch(server_name='0.0.0.0', server_port=7860)
 
-    # else:
-    #     logger.info('Starting RASS')
-    #     demo.launch()
+    else:
+        logger.info('Starting RASS')
+        demo.launch()
