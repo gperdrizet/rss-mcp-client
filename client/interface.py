@@ -23,6 +23,7 @@ async def agent_input(
     '''Handles model interactions.'''
 
     logger = logging.getLogger(__name__ + '.agent_input')
+    reply = 'No reply from LLM'
 
     user_query = chat_history[-1]['content']
     dialog.info('User: %s', user_query)
@@ -33,11 +34,13 @@ async def agent_input(
         input_messages
     )
 
+    logger.debug(result)
+
     if result['tool_result']:
         tool_call = result['tool_call']
         tool_name = tool_call['name']
 
-        if tool_name == 'rss_mcp_server_get_feed':
+        if tool_name == 'get_feed':
 
             tool_parameters = tool_call['parameters']
             website = tool_parameters['website']
@@ -93,7 +96,7 @@ async def agent_input(
 
         logger.info('Direct, no-tool reply: %s', reply)
 
-    dialog.info('LLM: %s ...', reply[:175])
+    dialog.info('LLM: %s ...', reply[:75])
     output_queue.put(reply)
     output_queue.put('bot-finished')
 
