@@ -2,7 +2,9 @@
 
 import os
 import re
-
+import logging
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
 
 def get_dialog_logger(name: str = 'dialog', clear: bool = True) -> logging.Logger:
     '''Sets up logger for model's internal dialog.'''
