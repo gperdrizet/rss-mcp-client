@@ -40,7 +40,7 @@ async def agent_input(
         tool_call = result['tool_call']
         tool_name = tool_call['name']
 
-        if tool_name == 'get_feed':
+        if tool_name == 'rss_mcp_server_get_feed':
 
             tool_parameters = tool_call['parameters']
             website = tool_parameters['website']
