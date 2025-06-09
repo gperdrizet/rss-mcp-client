@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
+
 def get_dialog_logger(name: str = 'dialog', clear: bool = True) -> logging.Logger:
     '''Sets up logger for model's internal dialog.'''
 
@@ -36,6 +37,7 @@ def get_dialog_logger(name: str = 'dialog', clear: bool = True) -> logging.Logge
     new_dialog_logger.setLevel(logging.INFO)
 
     return new_dialog_logger
+
 
 def update_dialog(n: int = 10):
     '''Gets updated internal dialog logging output from disk to display to user.
