@@ -9,10 +9,10 @@ from client import prompts
 from client.anthropic_bridge import AnthropicBridge
 
 INTERMEDIATE_REPLY_HINTS = {
-    'context_search': 'Let me find some additional context before I generate a final answer.',
-    'find_article': 'I will find the title of that article.',
-    'get_summary': 'I will summarize that article',
-    'get_link': 'I will get the link to that article'
+    'rss_mcp_server_context_search': 'Let me find some additional context before I generate a final answer.',
+    'rss_mcp_server_find_article': 'I will find the title of that article.',
+    'rss_mcp_server_get_summary': 'I will summarize that article',
+    'rss_mcp_server_get_link': 'I will get the link to that article'
 }
 
 async def tool_loop(
@@ -37,7 +37,7 @@ async def tool_loop(
     tool_call = result['tool_call']
     tool_name = tool_call['name']
 
-    if tool_name == 'get_feed':
+    if tool_name == 'rss_mcp_server_get_feed':
         reply = await get_feed_call(
             user_query,
             result,
