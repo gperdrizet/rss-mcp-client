@@ -71,7 +71,7 @@ class MCPTimeoutError(Exception):
 class MCPClientWrapper:
     '''Main client wrapper class for interacting with Model Context Protocol (MCP) endpoints'''
 
-    def __init__(self, endpoint: str, timeout: float = 30.0, max_retries: int = 3):
+    def __init__(self, endpoint: str, timeout: float = 360.0, max_retries: int = 3):
         '''Initialize MCP client with endpoint URL
         
         Args:

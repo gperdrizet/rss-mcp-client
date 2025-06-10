@@ -23,7 +23,7 @@ Path('logs').mkdir(parents=True, exist_ok=True)
 # Clear old logs if present
 gradio_funcs.delete_old_logs('logs', 'rss_client')
 
-# Configure
+# Configure the root logger
 logging.basicConfig(
     handlers=[RotatingFileHandler(
         'logs/rss_client.log',
@@ -31,7 +31,7 @@ logging.basicConfig(
         backupCount=10,
         mode='w'
     )],
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(levelname)s - %(name)s - %(message)s'
 )
 
@@ -40,8 +40,7 @@ logger = logging.getLogger(__name__)
 
 # Handle MCP server connection and interactions
 RSS_CLIENT = MCPClientWrapper(
-    'https://agents-mcp-hackathon-rss-mcp-server.hf.space/gradio_api/mcp/sse',
-    #'http://127.0.0.1:7861/gradio_api/mcp/sse'
+    'https://agents-mcp-hackathon-rss-mcp-server.hf.space/gradio_api/mcp/sse'
 )
 logger.info('Started MCP client')
 
@@ -56,6 +55,7 @@ logger.info('Started Anthropic API bridge')
 # Queue to return responses to user
 OUTPUT_QUEUE = queue.Queue()
 logger.info('Created response queue')
+
 
 def user_message(message: str, history: list) -> Tuple[str, list]:
     '''Adds user message to conversation and returns for immediate posting.
@@ -93,29 +93,32 @@ def send_message(chat_history: list):
 
         chat_history.append({'role': 'assistant', 'content': ''})
 
-        for character in response:
-            chat_history[-1]['content'] += character
-            time.sleep(0.005)
+        if response is not None:
 
-            yield chat_history
+            for character in response:
+                chat_history[-1]['content'] += character
+                time.sleep(0.005)
+
+                yield chat_history
 
 
-with gr.Blocks(title='MCP RSS client') as demo:
+with gr.Blocks(title='RASS agent') as demo:
     with gr.Row():
         gr.HTML(html.TITLE)
 
     gr.Markdown(html.DESCRIPTION)
+    gr.Markdown(html.FEATURES_TOOLS)
 
     # MCP connection/tool dump
     connect_btn = gr.Button('Connect to MCP server')
-    status = gr.Textbox(label='MCP server tool dump', interactive=False, lines=4)
+    status = gr.Textbox(label='MCP server tool dump', interactive=False, lines=5, max_lines=5)
     connect_btn.click(# pylint: disable=no-member
         RSS_CLIENT.list_tools,
         outputs=status
     )
 
     # Dialog log output
-    dialog_output = gr.Textbox(label='Internal dialog', lines=10, max_lines=100)
+    dialog_output = gr.Textbox(label='Internal dialog', lines=5, max_lines=5)
     timer = gr.Timer(0.5, active=True)
 
     timer.tick( # pylint: disable=no-member
@@ -132,9 +135,9 @@ with gr.Blocks(title='MCP RSS client') as demo:
     )
 
     msg = gr.Textbox(
-        'Are there any new posts on Hacker News?',
+        'Are there any new posts on Slashdot?',
         label='Ask about content or articles on a site or platform',
-        placeholder='Is there anything new on Hacker News?',
+        placeholder='Is there anything new on Slashdot?',
         scale=4
     )
 
@@ -148,6 +151,7 @@ with gr.Blocks(title='MCP RSS client') as demo:
 if __name__ == '__main__':
 
     current_directory = os.getcwd()
+    logger.info(current_directory)
 
     if 'pyrite' in current_directory:
         logger.info('Starting RASS on LAN')

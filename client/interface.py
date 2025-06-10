@@ -1,14 +1,13 @@
 '''Functions for controlling chat flow between Gradio and Anthropic/MCP'''
 
-import json
 import logging
 import queue
-from anthropic.types import text_block
 from gradio.components.chatbot import ChatMessage
 
 from client import prompts
 from client.anthropic_bridge import AnthropicBridge
 import client.gradio_functions as gradio_funcs
+import client.tool_workflows as tool_funcs
 
 # Create dialog logger
 dialog = gradio_funcs.get_dialog_logger(clear = True)
@@ -26,6 +25,13 @@ async def agent_input(
     reply = 'No reply from LLM'
 
     user_query = chat_history[-1]['content']
+
+    if len(chat_history) > 1:
+        prior_reply = chat_history[-2]['content']
+
+    else:
+        prior_reply = ''
+
     dialog.info('User: %s', user_query)
 
     input_messages = format_chat_history(chat_history)
@@ -34,70 +40,29 @@ async def agent_input(
         input_messages
     )
 
-    logger.debug(result)
-
     if result['tool_result']:
-        tool_call = result['tool_call']
-        tool_name = tool_call['name']
-
-        if tool_name == 'rss_mcp_server_get_feed':
-
-            tool_parameters = tool_call['parameters']
-            website = tool_parameters['website']
-            response_content = result['llm_response'].content[0]
-
-            if isinstance(response_content, text_block.TextBlock):
-                intermediate_reply = response_content.text
-            else:
-                intermediate_reply = f'I Will check the {website} RSS feed for you'
-
-            output_queue.put(intermediate_reply)
-            dialog.info('LLM: %s', intermediate_reply)
-            dialog.info('LLM: called %s on %s', tool_name, website)
-
-            articles = json.loads(result['tool_result'].content)['text']
-
-            prompt = prompts.GET_FEED_PROMPT.substitute(
-                website=website,
-                user_query=user_query,
-                intermediate_reply=intermediate_reply,
-                articles=articles
-            )
-
-            input_message =[{
-                'role': 'user',
-                'content': prompt
-            }]
-
-            dialog.info('System: re-prompting LLM with return from %s call', tool_name)
-            dialog.info('New prompt: %s ...', prompt[:75])
-
-            logger.info('Re-prompting input %s', input_message)
-            result = await bridge.process_query(
-                prompts.GET_FEED_SYSTEM_PROMPT,
-                input_message
-            )
-
-            try:
-
-                reply = result['llm_response'].content[0].text
-
-            except (IndexError, AttributeError):
-                reply = 'No final reply from model'
-
-            logger.info('LLM final reply: %s', reply)
+        logger.info('LLM called tool, entering tool loop.')
+        await tool_funcs.tool_loop(
+            user_query,
+            prior_reply,
+            result,
+            bridge,
+            output_queue,
+            dialog
+        )
 
     else:
+        logger.info('LLM replied directly.')
+
         try:
             reply = result['llm_response'].content[0].text
 
         except AttributeError:
             reply = 'Bad reply - could not parse'
 
-        logger.info('Direct, no-tool reply: %s', reply)
+        logger.info('Reply: %s', reply)
+        output_queue.put(reply)
 
-    dialog.info('LLM: %s ...', reply[:75])
-    output_queue.put(reply)
     output_queue.put('bot-finished')
 
 
