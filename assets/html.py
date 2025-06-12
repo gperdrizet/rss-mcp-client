@@ -16,7 +16,7 @@ DESCRIPTION = (
         <b>Solution</b>: Build a tool to allow LLMs to find and interact with RSS feeds on behalf of the user.</p>
         <h2>Introduction</h2>
         <p>This demonstration uses sister space
-        <a href='https://huggingface.co/spaces/Agents-MCP-Hackathon/rss-mcp-server'>
+        <a href='https://huggingface.co/spaces/gperdrizet/rss-mcp-server'>
         RSS feed reader</a> via MCP to interact with RSS feeds. Click 'Connect to MCP 
         server' to get started. If it takes a minute or two to reply, don't worry the inference
         container was probably cold and spinning up. Check out the 
