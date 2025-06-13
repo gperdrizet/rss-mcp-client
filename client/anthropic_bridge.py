@@ -5,7 +5,7 @@ from typing import Dict, List, Any, Optional
 import anthropic
 from client.mcp_client import MCPClientWrapper, ToolDef, ToolParameter, ToolInvocationResult
 
-DEFAULT_ANTHROPIC_MODEL = 'claude-3-haiku-20240307'
+DEFAULT_ANTHROPIC_MODEL = 'claude-3-5-haiku-latest'
 
 # Type mapping from Python/MCP types to JSON Schema types
 TYPE_MAPPING = {
