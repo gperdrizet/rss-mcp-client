@@ -11,30 +11,29 @@ TITLE = (
 
 DESCRIPTION = (
     '''
-        <p><b>Problem</b>: I love RSS feeds, but need help keeping up with all of the content from my subscriptions.
+        <p><b>Problem</b>: I love RSS feeds, but want help keeping up with the content flux.
         
-        <b>Solution</b>: Build a tool to allow LLMs to find and interact with RSS feeds on behalf of the user.</p>
+        <b>Solution</b>: Build tools for LLMs to find and interact with RSS feeds on my behalf.</p>
         <h2>Introduction</h2>
         <p>This demonstration uses sister space
         <a href='https://huggingface.co/spaces/gperdrizet/rss-mcp-server'>
         RSS feed reader</a> via MCP to interact with RSS feeds. Click 'Connect to MCP 
-        server' to get started. If it takes a minute or two to reply, don't worry the inference
-        container was probably cold and spinning up. Check out the 
+        server' to get started. If the first reply takes a few minutes, don't worry, the inference
+        container was probably cold and needed to be spun up. Check out the 
         <a href='https://github.com/gperdrizet/MCP-hackathon/tree/main'>
         main project repo on GitHub</a>. Both Spaces by
         <a href=https://www.linkedin.com/in/gperdrizet/'>George Perdrizet</a>.</p>
 
-        I love RSS feeds - they remind me of a time when the internet was a weird and
-        wonderful place, filled with interesting content hiding behind every link. The tools
-        to produce and navigate that content have improved by leaps and bounds. However, 
-        the improvement has not come without some losses. Content often feels homogeneous and
-        it is too often painfully apparent that your favorite platform has a large degree of
-        control over what content you see and what content you don't.
+        I love RSS feeds - they remind me of a time when the internet was a weird and wonderful 
+        place, filled with interesting content behind every link. The tools to produce and 
+        navigate content have improved by leaps and bounds. However, improvement has not come 
+        without cost. Content often feels homogeneous and highly curated. The degree to which 
+        your favorite platform controls what you see and what you don't is painfully apparent.
 
-        This tool give the user back some of that control. It let's them decide what content
-        and sources they are interested in. I built it because I want access to diverse,
-        unfiltered publishing by many sources, paired modern AI to help me navigate it. 
-        I want the model to help me ingest my feed, not create it for me!
+        This tool gives the user back some of that control. It lets you decide what content 
+        sources you are interested in, and then pull from them directly. I built it because I 
+        want access to diverse and unfiltered publishing by many sources, and I want modern AI 
+        to help me navigate it. I want the model to help me ingest my feed, not create it for me!
     '''
 )
 
